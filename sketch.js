@@ -1,8 +1,12 @@
+var booster=0;
 var bg,bgImage;
 var mario_running, mario_collide,mario,marioJump;
+var dieSound;
 var brickGroup,brickImage;
 var coinGroup,coinImage,coinScore=0;
 var coinSound;
+var status="play";
+var obstacleGroup,obs1,obs2,obsImage1,obsImage2;
 function preload(){
     mario_running =  loadAnimation("images/mar1.png","images/mar2.png","images/mar3.png",
   "images/mar4.png","images/mar5.png","images/mar6.png","images/mar7.png");
@@ -10,28 +14,53 @@ function preload(){
     brickImage=loadImage("images/brick.png");
     coinSound=loadSound("sounds/coinSound.mp3");
     marioJump=loadSound("sounds/jump.mp3");
-    coinImage=loadAnimation("images/con1.png","images/con2.png","images/con3.png","images/con4.png","images/con5.png","images/con6.png")
+    mario_collide=loadAnimation("images/dead.png");
+    dieSound=loadSound("sounds/dieSound.mp3");
+    obsImage2=loadAnimation("images/tur1.png","images/tur2.png","images/tur3.png","images/tur4.png","images/tur5.png");
+    obsImage1=loadAnimation("images/mush1.png","images/mush1.png","images/mush3.png","images/mush4.png","images/mush5.png","images/mush6.png");
+    coinImage=loadAnimation("images/con1.png","images/con2.png","images/con3.png","images/con4.png","images/con5.png","images/con6.png");
 }
 
 function setup() {
 createCanvas(1000, 600);
+//background sprite
 bg=createSprite(580,300);
 bg.addImage(bgImage);
 bg.scale=0.5;
 bg.velocityX=-6;
+//mario sprite
 mario=createSprite(200,505,20,50);
 mario.addAnimation("running",mario_running);
 mario.scale=0.3;
+//platform for mario,it is invisible
 ground=createSprite(200,585,400,10);
 ground.visible=false;
 //group for bricks
 brickGroup=new Group();
 //group of coins
 coinGroup=new Group();
+//group of obstacles
+obstacleGroup=new Group();
 }
 
 
 function draw() {
+//game in play mode
+if(status==="play"){
+    if(keyDown("b")){
+        booster=1;
+    }
+    else{
+        booster=0;
+    }
+//decides speed of the background
+    if(booster==1){
+        bg.velocityX=-15;
+
+    }
+    else{
+        bg.velocityX=-6;
+    }
     if(keyDown("space")){
         mario.velocityY=-16;
         marioJump.play();
@@ -53,6 +82,7 @@ function draw() {
     }
     //infinite coins
     generateCoins();
+
     //catch the coins
     for(var i=0;i<coinGroup.length;i++){
         var temp=coinGroup.get(i);
@@ -64,6 +94,8 @@ function draw() {
 
         }
     }
+    //infinite obstacles
+    obstacles();
     //avoid mario being pushed away
     if(mario.x<200){
         mario.x=200;
@@ -71,12 +103,25 @@ function draw() {
     //stop mario from going out of the screen
     if(mario.y<50){
         mario.y=50;
+    }    
     }
+//game in end mode
+    else if(status==="end"){
+
+    }
+
 drawSprites();
 strokeWeight(20);
 stroke("green");
 fill("White");
-text("Total Coins Collected="+coinScore,140,100);
+if(booster==1){
+    text("YOU ARE PLAYING BOOSTER MODE",140,150);
+    text("Total Coins Collected="+coinScore,140,100);    
+}
+else{
+    text("Total Coins Collected="+coinScore,140,100);
+}
+
 }
 
 //infinite no. of bricks
@@ -84,10 +129,17 @@ function generateBricks(){
     if(frameCount%70==0){
         var brick=createSprite(1200,120,40,10);
     brick.y=random(50,450);
-    brick.velocityX=-5;
+//increase in velocity for booster mode
+    if(booster==1){
+        brickGroup.setVelocityXEach(-15);
+
+    }
+    else{
+        brickGroup.setVelocityXEach(-5);
+    }
     brick.addImage(brickImage);
     brick.scale=0.5;
-    brick.lifetime=250;
+    brick.lifetime=400;
     brickGroup.add(brick);
     }
 }
@@ -98,9 +150,45 @@ function generateCoins(){
         var coin=createSprite(1200,120,40,10);
         coin.addAnimation("coin",coinImage);
         coin.y=random(80,350);
-        coin.velocityX=-5;
+//increase in velocity for booster mode
+        if(booster==1){
+         coinGroup.setVelocityXEach(-15);   
+        }
+        else{
+            coinGroup.setVelocityXEach(-5);
+        }
         coin.scale=0.1;
         coin.lifetime=1200;
         coinGroup.add(coin);
+    }
+}
+
+//infinite obstacles
+function obstacles(){
+    if(frameCount%100===0){
+        var obs=createSprite(1200,545,10,40);
+//increase in velocity for booster mode
+        if(booster==1){
+            obstacleGroup.setVelocityXEach(-15);
+        }
+        else{
+            obstacleGroup.setVelocityXEach(-4);
+        }
+        
+//generate random number 1 or 2 which decides animation to be loaded
+        var rand=Math.round(random(1,2));
+        obs.scale=0.2;
+//switch animation to the sprite obs by turtle ans mushroom
+        switch(rand){
+            case 1:
+                obs.addAnimation("mush",obsImage1);
+                break;
+            case 2:
+                obs.addAnimation("tur",obsImage2);
+                break;
+            
+        }
+        obs.lifetime=400;
+        obstacleGroup.add(obs);
     }
 }
