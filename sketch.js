@@ -31,7 +31,9 @@ bg.velocityX=-6;
 //mario sprite
 mario=createSprite(200,505,20,50);
 mario.addAnimation("running",mario_running);
+mario.addAnimation("collide",mario_collide);
 mario.scale=0.3;
+mario.debug=true;
 //platform for mario,it is invisible
 ground=createSprite(200,585,400,10);
 ground.visible=false;
@@ -96,6 +98,13 @@ if(status==="play"){
     }
     //infinite obstacles
     obstacles();
+    //mario interacting with obstacles
+    if(obstacleGroup.isTouching(mario)){
+        status="end";
+        dieSound.play();
+
+
+    }
     //avoid mario being pushed away
     if(mario.x<200){
         mario.x=200;
@@ -104,11 +113,24 @@ if(status==="play"){
     if(mario.y<50){
         mario.y=50;
     }    
-    }
+    
 //game in end mode
     else if(status==="end"){
-
+        bg.velocityX=0;
+        mario.velocityY=0;
+        mario.velocityX=0;
+        mario.changeAnimation("collide",mario_collide);
+        obstacleGroup.setVelocityXEach(0);
+        coinGroup.setVelocityXEach(0);
+        brickGroup.setVelocityXEach(0);
+        obstacleGroup.setLifetimeEach(-1);
+        coinGroup.setLifetimeEach(-1);
+        brickGroup.setLifetimeEach(-1);
+        mario.setCollider("rectangle",0,0,300,10);
+        mario.y=570;
+        mario.scale=0.4;
     }
+}
 
 drawSprites();
 strokeWeight(20);
